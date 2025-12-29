@@ -1,33 +1,117 @@
-{% extends "base.html" %} {% block title %} Events {% endblock title %}
-{% block navbar %}
-<ul class="navbar-nav">
-    <li class="nav-item">
-        <a href="{% url 'logout' %}" class="text-decoration-none"><button class="btn btn-danger">Logout</button></a>
-    </li>
-  </ul>
-{% endblock navbar %}
+{% extends "base.html" %}
+
+{% block title %}My Events{% endblock title %}
+
 {% block content %}
-<div class="text-center">
-    <h1>Events</h1>
-</div>
-<div class="container mt-5">
-    <div class="row">
-        {% for event in object_list %}
-        <div class="col-md-3 mb-4">
-            <a href="{% url 'event_detail' pk=event.pk %}" class="text-decoration-none">
-                <div class="card" style="width: 18rem; height: 18rem;">
-                    {% if event.thumbnail %}
-                        <img src="{{ event.thumbnail }}" class="img-thumbnail h-75" alt="{{ event.name }} Thumbnail">
-                    {% endif %}
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            {{ event.name }} - {{ event.date|date:"d F Y" }}
-                        </h5>
-                    </div>
-                </div>
-            </a>
-        </div>
-        {% endfor %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <h1 class="page-title">
+            {% if user.is_superuser %}
+            🎯 All Events
+            {% else %}
+            📅 My Events
+            {% endif %}
+        </h1>
+        <p style="text-align: center; color: var(--gray); font-size: 1.125rem; margin-top: 0.5rem;">
+            {% if user.is_superuser %}
+            Managing all user events across the platform
+            {% else %}
+            Your personal collection of memorable moments
+            {% endif %}
+        </p>
     </div>
 </div>
+
+<!-- Events Grid -->
+<div class="container" style="padding: 2rem 1.5rem 4rem;">
+    {% if object_list %}
+    <div class="events-grid">
+        {% for event in object_list %}
+        <a href="{% url 'event_detail' pk=event.pk %}" style="text-decoration: none; color: inherit;">
+            <div class="card-custom event-card">
+                <!-- Event Badge -->
+                <div class="event-badge">
+                    📸 {{ event.event_photos.count }} photo{{ event.event_photos.count|pluralize }}
+                </div>
+
+                <!-- Event Thumbnail -->
+                {% if event.thumbnail %}
+                <img src="{{ event.thumbnail }}"
+                     alt="{{ event.name }}"
+                     class="card-img-custom"
+                     loading="lazy">
+                {% else %}
+                <div class="card-img-custom" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 4rem;">📷</span>
+                </div>
+                {% endif %}
+
+                <!-- Event Details -->
+                <div class="card-body-custom">
+                    <h3 class="card-title-custom">{{ event.name }}</h3>
+                    <div class="card-date-custom">
+                        <span style="font-size: 1.25rem;">📅</span>
+                        <span>{{ event.date|date:"F d, Y" }}</span>
+                    </div>
+                    {% if user.is_superuser %}
+                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--light);">
+                        <span style="color: var(--gray); font-size: 0.875rem;">
+                            👤 {{ event.customer.get_full_name|default:event.customer.username }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <h2 class="empty-state-title">No Events Yet</h2>
+        <p class="empty-state-text">
+            {% if user.is_superuser %}
+            No events have been created in the system yet.
+            {% else %}
+            Start creating events to organize and showcase your photos!
+            {% endif %}
+        </p>
+        {% if not user.is_superuser %}
+        <a href="/admin/" class="btn btn-primary-custom" style="margin-top: 1.5rem; text-decoration: none;">
+            <span>➕</span> Create Your First Event
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Stats (Optional) -->
+{% if object_list %}
+<div class="container" style="margin-bottom: 3rem;">
+    <div style="background: var(--white); padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+        <div class="row text-center">
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📅</div>
+                <h3 style="font-size: 2rem; color: var(--primary-color); margin-bottom: 0.25rem;">{{ object_list.count }}</h3>
+                <p style="color: var(--gray); font-size: 0.875rem; margin: 0;">Total Events</p>
+            </div>
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📸</div>
+                <h3 style="font-size: 2rem; color: var(--primary-color); margin-bottom: 0.25rem;">
+                    {% widthratio object_list 1 1 as total_photos %}
+                    {{ total_photos|default:"0" }}
+                </h3>
+                <p style="color: var(--gray); font-size: 0.875rem; margin: 0;">Total Photos</p>
+            </div>
+            <div class="col-md-4">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🎨</div>
+                <h3 style="font-size: 2rem; color: var(--primary-color); margin-bottom: 0.25rem;">∞</h3>
+                <p style="color: var(--gray); font-size: 0.875rem; margin: 0;">Memories Preserved</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock content %}

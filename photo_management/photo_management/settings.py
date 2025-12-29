@@ -20,12 +20,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-t@s7)c^ud%m#t7@3&@4$5m^e+e2w9*7r-hie!1vuz6$_#88bmk'
+# Read from environment variable, fallback to insecure key for development only
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-t@s7)c^ud%m#t7@3&@4$5m^e+e2w9*7r-hie!1vuz6$_#88bmk'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Default to False for security, must explicitly set to 'True' in development
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+# Only allow specific hosts in production
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -85,6 +91,15 @@ DATABASES = {
     }
 }
 
+# Cache configuration for rate limiting
+# In production, use Redis or Memcached instead of LocMemCache
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -129,3 +144,29 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
+
+# Security Settings
+# Only enforce HTTPS in production (when DEBUG=False)
+if not DEBUG:
+    # HTTPS/SSL Settings
+    SECURE_SSL_REDIRECT = True  # Redirect all HTTP to HTTPS
+    SESSION_COOKIE_SECURE = True  # Only send session cookie over HTTPS
+    CSRF_COOKIE_SECURE = True  # Only send CSRF cookie over HTTPS
+
+    # HSTS (HTTP Strict Transport Security) - tells browsers to only use HTTPS
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    # Prevent browsers from guessing content type
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+    # XSS Protection
+    SECURE_BROWSER_XSS_FILTER = True
+
+    # Clickjacking protection
+    X_FRAME_OPTIONS = 'DENY'
+
+# Apply basic security even in development
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True

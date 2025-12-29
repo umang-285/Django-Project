@@ -17,19 +17,8 @@ class Event(models.Model):
         # Fetch the thumbnail photo associated with this event
         thumbnail_photo = self.event_photos.filter(is_thumbnail=True).first()
         if thumbnail_photo:
-            return thumbnail_photo.image.url  # Assuming 'image' is the field storing the image path
+            return thumbnail_photo.image.url
         return None
-    
-    def save(self, *args, **kwargs):
-        # If this photo is being marked as the thumbnail, unmark all other photos as not thumbnail
-        photo = self.event_photos
-        default_thumbnail = photo.filter(is_thumbnail=True)
-        if not default_thumbnail.exists():
-            default_photo = photo.first()
-            if default_photo:
-                default_photo.is_thumbnail = True
-                default_photo.save()  # Save the changes to the default thumbnail
-        return super().save(*args, **kwargs)
 
 
 class Photo(models.Model):
@@ -45,12 +34,21 @@ class Photo(models.Model):
     is_thumbnail = models.BooleanField(default=False, editable=True)
 
     def save(self, *args, **kwargs):
-        # If this photo is being marked as the thumbnail, unmark all other photos as not thumbnail
+        # If this photo is being marked as the thumbnail, unmark all other photos
         if self.is_thumbnail:
+            # Use update() to avoid triggering save() on other photos (prevents recursion)
             self.event.event_photos.exclude(pk=self.pk).update(is_thumbnail=False)
-        else:
-            first_photo = self.event.event_photos.first()
-            if first_photo:
-                first_photo.is_thumbnail = True
-                first_photo.save()
-        return super().save(*args, **kwargs)
+
+        # Save the current photo
+        super().save(*args, **kwargs)
+
+        # After saving, ensure at least one photo is marked as thumbnail
+        # Only check if this photo is NOT a thumbnail
+        if not self.is_thumbnail:
+            has_thumbnail = self.event.event_photos.filter(is_thumbnail=True).exists()
+            if not has_thumbnail:
+                # No thumbnail exists, make the first photo the thumbnail
+                # Use update() to avoid infinite recursion
+                first_photo = self.event.event_photos.first()
+                if first_photo:
+                    self.event.event_photos.filter(pk=first_photo.pk).update(is_thumbnail=True)

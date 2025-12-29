@@ -2,70 +2,97 @@
 
 {% block title %}Login{% endblock %}
 
+{% block navigation %}{% endblock navigation %}
+
 {% block content%}
-<section class="vh-100" style="background-color: #508bfc">
-  <div class="container py-5 h-100">
-    <div class="row d-flex justify-content-center align-items-center h-100">
-      <div class="col-12 col-md-8 col-lg-6 col-xl-5">
-        <div class="card shadow-2-strong" style="border-radius: 1rem">
-          <div class="card-body p-5 text-center">
-            {% if error %}
-            <div class="alert alert-danger" role="alert">
-              {{ error }}
+<div class="auth-container">
+    <div class="auth-card">
+        <!-- Logo/Icon -->
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">📸</div>
+            <h2 style="font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; margin: 0;">
+                <span class="text-gradient">MemoryVault</span>
+            </h2>
+        </div>
+
+        <h3 class="auth-title">Welcome Back!</h3>
+        <p style="text-align: center; color: var(--gray); margin-bottom: 2rem;">
+            Sign in to access your photo gallery
+        </p>
+
+        <!-- Error Alert -->
+        {% if error %}
+        <div class="alert-custom alert-danger-custom">
+            <span style="font-size: 1.25rem;">⚠️</span>
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Login Form -->
+        <form action="{% url 'login' %}" method="post">
+            {% csrf_token %}
+
+            <div class="form-group-custom">
+                <label for="username" class="form-label-custom">
+                    <span style="margin-right: 0.25rem;">👤</span> Username
+                </label>
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    class="form-control-custom"
+                    placeholder="Enter your username"
+                    required
+                    autocomplete="username"
+                    autofocus
+                />
             </div>
-            {% endif %}
-            <h3 class="mb-5">Sign in</h3>
-            <form action="{% url 'login' %}" method="post">
-              {% csrf_token %}
-              <div data-mdb-input-init class="form-outline mb-4">
-                <input
-                  type="text"
-                  id="typeEmailX-2"
-                  name="username"
-                  class="form-control form-control-lg"
-                  required
-                  placeholder="Username"
-                />
-              </div>
 
-              <div data-mdb-input-init class="form-outline mb-4">
+            <div class="form-group-custom">
+                <label for="password" class="form-label-custom">
+                    <span style="margin-right: 0.25rem;">🔒</span> Password
+                </label>
                 <input
-                  type="password"
-                  id="typePasswordX-2"
-                  name="password"
-                  class="form-control form-control-lg"
-                  required
-                  placeholder="Password"
+                    type="password"
+                    id="password"
+                    name="password"
+                    class="form-control-custom"
+                    placeholder="Enter your password"
+                    required
+                    autocomplete="current-password"
                 />
-              </div>
-
-            <!-- Checkbox -->
-            <!-- <div class="form-check d-flex justify-content-start mb-4">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                value=""
-                id="form1Example3"
-              />
-              <label class="form-check-label" for="form1Example3">
-                Remember password
-              </label>
-            </div> -->
+            </div>
 
             <button
-              data-mdb-button-init
-              data-mdb-ripple-init
-              class="btn btn-primary btn-lg btn-block"
-              type="submit"
+                type="submit"
+                class="btn-custom btn-primary-custom"
+                style="width: 100%; justify-content: center; font-size: 1rem; padding: 1rem;"
             >
-              Login
+                <span style="margin-right: 0.5rem;">🚀</span> Sign In
             </button>
-          </form>
-          <p>Don't have an account? <a href="{% url 'signup' %}">Register here</a></p>
-          </div>
+        </form>
+
+        <!-- Divider -->
+        <div style="position: relative; text-align: center; margin: 2rem 0;">
+            <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--light);"></div>
+            <span style="position: relative; background: var(--white); padding: 0 1rem; color: var(--gray); font-size: 0.875rem;">
+                Don't have an account?
+            </span>
         </div>
-      </div>
+
+        <!-- Sign Up Link -->
+        <div class="auth-footer">
+            <a href="{% url 'signup' %}" class="btn-custom btn-outline-custom" style="width: 100%; justify-content: center; text-decoration: none;">
+                <span style="margin-right: 0.5rem;">✨</span> Create New Account
+            </a>
+        </div>
+
+        <!-- Security Note -->
+        <div style="margin-top: 2rem; padding: 1rem; background: var(--light); border-radius: var(--radius-md); text-align: center;">
+            <p style="margin: 0; font-size: 0.75rem; color: var(--gray);">
+                🔐 Your connection is secure and encrypted
+            </p>
+        </div>
     </div>
-  </div>
-</section>
+</div>
 {% endblock %}

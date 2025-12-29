@@ -1,27 +1,149 @@
 {% extends "base.html" %}
 
-{% block title %}
-    {{ event.name }}
-{% endblock title %}
+{% block title %}{{ event.name }}{% endblock title %}
 
 {% block content %}
-<div class="sticky-top">
-    {% for breadcrumb in breadcrumbs %}
-        <span><a href="{{ breadcrumb.url }}">{{ breadcrumb.name }}</a></span>
-        {% if not forloop.last %}
-            <span>&raquo;</span>
-        {% endif %}
-    {% endfor %}
+<!-- Breadcrumb -->
+<div class="breadcrumb-custom">
+    <div class="container">
+        <nav style="font-size: 0.875rem;">
+            {% for breadcrumb in breadcrumbs %}
+                {% if breadcrumb.url %}
+                <a href="{{ breadcrumb.url }}" style="color: var(--primary-color); font-weight: 500;">{{ breadcrumb.name }}</a>
+                {% else %}
+                <span style="color: var(--dark); font-weight: 600;">{{ breadcrumb.name }}</span>
+                {% endif %}
+                {% if not forloop.last %}
+                <span style="color: var(--gray); margin: 0 0.5rem;">›</span>
+                {% endif %}
+            {% endfor %}
+        </nav>
+    </div>
 </div>
-    <h1>{{ event.name }}</h1>
-    <p><strong>Date:</strong> {{ event.date }}</p>
 
-    <h2>Photos:</h2>
-    {% for photo in photos %}
-        <div>
-            <img src="{{ photo.image.url }}" alt="{{ photo.description }}" title="{{ photo.description }}">
+<!-- Event Header -->
+<div class="container" style="margin-top: 2rem;">
+    <div class="event-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--dark);">
+                    <span style="margin-right: 0.5rem;">📸</span>{{ event.name }}
+                </h1>
+                <div class="event-info">
+                    <div class="event-meta">
+                        <span style="font-size: 1.25rem;">📅</span>
+                        <strong>Date:</strong> {{ event.date|date:"F d, Y" }}
+                    </div>
+                    <div class="event-meta">
+                        <span style="font-size: 1.25rem;">📷</span>
+                        <strong>Photos:</strong> {{ photos.count }} image{{ photos.count|pluralize }}
+                    </div>
+                    {% if user.is_superuser %}
+                    <div class="event-meta">
+                        <span style="font-size: 1.25rem;">👤</span>
+                        <strong>Owner:</strong> {{ event.customer.get_full_name|default:event.customer.username }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="/" class="btn btn-outline-custom">
+                    <span>←</span> Back to Events
+                </a>
+                {% if user.is_superuser or event.customer == user %}
+                <a href="/admin/photogallery/event/{{ event.id }}/change/" class="btn btn-primary-custom" style="margin-left: 0.5rem;">
+                    <span>✏️</span> Edit Event
+                </a>
+                {% endif %}
+            </div>
         </div>
-    {% empty %}
-        <p>No photos available.</p>
-    {% endfor %}
+    </div>
+</div>
+
+<!-- Photo Gallery -->
+<div class="container" style="padding: 2rem 1.5rem 4rem;">
+    {% if photos %}
+    <div style="margin-bottom: 2rem;">
+        <h2 style="font-size: 1.75rem; font-weight: 700; color: var(--dark); margin-bottom: 0.5rem;">
+            🖼️ Photo Gallery
+        </h2>
+        <p style="color: var(--gray);">Click on any photo to view in full size</p>
+    </div>
+
+    <div class="gallery-grid">
+        {% for photo in photos %}
+        <div class="gallery-item">
+            <img src="{{ photo.image.url }}"
+                 alt="{{ photo.description|default:event.name }}"
+                 class="gallery-img"
+                 loading="lazy">
+
+            <div class="gallery-overlay">
+                <div class="gallery-description">
+                    {{ photo.description|default:"No description" }}
+                    {% if photo.is_thumbnail %}
+                    <span style="margin-left: 0.5rem; padding: 0.25rem 0.5rem; background: var(--warning); color: var(--white); border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 600;">
+                        ⭐ Thumbnail
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Gallery Actions -->
+    <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md);">
+        <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--dark);">
+            Enjoying this event?
+        </h3>
+        <p style="color: var(--gray); margin-bottom: 1.5rem;">
+            {% if user.is_superuser or event.customer == user %}
+            You can add more photos or edit this event in the admin panel.
+            {% else %}
+            Create your own events to preserve your memorable moments!
+            {% endif %}
+        </p>
+        {% if user.is_superuser or event.customer == user %}
+        <a href="/admin/photogallery/event/{{ event.id }}/change/" class="btn btn-primary-custom" style="text-decoration: none;">
+            <span>➕</span> Add More Photos
+        </a>
+        {% else %}
+        <a href="/admin/" class="btn btn-primary-custom" style="text-decoration: none;">
+            <span>🎨</span> Create Your Own Event
+        </a>
+        {% endif %}
+    </div>
+
+    {% else %}
+    <!-- Empty Gallery State -->
+    <div class="empty-state">
+        <div class="empty-state-icon">📷</div>
+        <h2 class="empty-state-title">No Photos Yet</h2>
+        <p class="empty-state-text">
+            This event doesn't have any photos yet. Start adding some to bring it to life!
+        </p>
+        {% if user.is_superuser or event.customer == user %}
+        <a href="/admin/photogallery/event/{{ event.id }}/change/" class="btn btn-primary-custom" style="margin-top: 1.5rem; text-decoration: none;">
+            <span>➕</span> Add Photos
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Related Info -->
+{% if photos %}
+<div class="container" style="margin-bottom: 3rem;">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 3rem 2rem; border-radius: var(--radius-lg); color: var(--white); text-align: center;">
+        <h3 style="font-size: 2rem; margin-bottom: 1rem; font-weight: 700;">
+            💡 Did You Know?
+        </h3>
+        <p style="font-size: 1.125rem; margin-bottom: 0; opacity: 0.95;">
+            This event contains <strong>{{ photos.count }}</strong> precious {{ photos.count|pluralize:"memory,memories" }}
+            captured on {{ event.date|date:"F d, Y" }}. Keep preserving your moments!
+        </p>
+    </div>
+</div>
+{% endif %}
 {% endblock content %}
